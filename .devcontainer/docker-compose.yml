@@ -1,21 +1,19 @@
-version: "3.8"
-
-volumes:
-  postgres-data:
+# docker-compose.yml
+version: '3.8'
 
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=n8n
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: n8n
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
@@ -28,16 +26,15 @@ services:
     ports:
       - "5678:5678"
     environment:
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_DATABASE=n8n
-      - DB_POSTGRESDB_USER=postgres
-      - DB_POSTGRESDB_PASSWORD=password
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: postgres
+      DB_POSTGRESDB_PASSWORD: password
+      N8N_BASIC_AUTH_ACTIVE: "true"           # turn on basic auth
+      N8N_BASIC_AUTH_USER: you
+      N8N_BASIC_AUTH_PASSWORD: secret
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
 
-      # (optional) enforce correct permissions now
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
-
-      # basic auth, if you want it
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=you
-      - N8N_BASIC_AUTH_PASSWORD=secret
+volumes:
+  postgres-data:
