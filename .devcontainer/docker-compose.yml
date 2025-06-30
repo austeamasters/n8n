@@ -1,3 +1,5 @@
+version: '3.8'
+
 volumes:
   postgres-data:
 
@@ -9,16 +11,23 @@ services:
       - postgres-data:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=n8n
+      - POSTGRES_USER=n8n
       - POSTGRES_PASSWORD=password
 
   n8n:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ..:/workspaces:cached
-    command: sleep infinity
+    image: n8nio/n8n:latest        # use the official image
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - '5678:5678'                # expose 5678 to the host
     environment:
-      DB_POSTGRESDB_HOST: postgres
-      DB_TYPE: postgresdb
-      DB_POSTGRESDB_PASSWORD: password
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=n8n
+      - DB_POSTGRESDB_PASSWORD=password
+      # optionally:
+      # - N8N_BASIC_AUTH_ACTIVE=true
+      # - N8N_BASIC_AUTH_USER=you
+      # - N8N_BASIC_AUTH_PASSWORD=secret
