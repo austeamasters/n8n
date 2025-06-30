@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  n8n-network:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -10,39 +14,37 @@ services:
       POSTGRES_DB: n8n
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    networks:
+      - n8n-network
 
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     ports:
       - "5678:5678"
     environment:
-      # PostgreSQL connection
+      # DB connection
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_DATABASE: n8n
       DB_POSTGRESDB_USER: postgres
       DB_POSTGRESDB_PASSWORD: password
 
-      # n8n server bind settings
+      # bind settings
       N8N_HOST: 0.0.0.0
       N8N_PORT: 5678
 
-      # optional basic auth
+      # enforce permissions (optional)
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+
+      # basic auth (optional)
       N8N_BASIC_AUTH_ACTIVE: "true"
       N8N_BASIC_AUTH_USER: you
       N8N_BASIC_AUTH_PASSWORD: secret
-
-      # fix settings-file permission warning
-      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+    networks:
+      - n8n-network
 
 volumes:
   postgres-data:
