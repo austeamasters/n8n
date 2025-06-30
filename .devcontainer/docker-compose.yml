@@ -1,49 +1,24 @@
-version: '3.8'
-
-networks:
-  dokploy:
-    external: true
+volumes:
+  postgres-data:
 
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: n8n
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    networks:
-      - dokploy
+    environment:
+      - POSTGRES_DB=n8n
+      - POSTGRES_PASSWORD=password
 
   n8n:
-    image: n8nio/n8n:latest
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    ports:
-      - "5678:5678"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspaces:cached
+    command: sleep infinity
     environment:
-      DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
-      DB_POSTGRESDB_DATABASE: n8n
-      DB_POSTGRESDB_USER: postgres
+      DB_TYPE: postgresdb
       DB_POSTGRESDB_PASSWORD: password
-      N8N_HOST: 0.0.0.0
-      N8N_PORT: 5678
-      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
-      N8N_BASIC_AUTH_ACTIVE: "true"
-      N8N_BASIC_AUTH_USER: you
-      N8N_BASIC_AUTH_PASSWORD: secret
-    networks:
-      - dokploy
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.n8n.rule=Host(`n8n.australianteamasters.com.au`)"
-      - "traefik.http.routers.n8n.entrypoints=web,websecure"
-      - "traefik.http.routers.n8n.tls=true"
-      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
-
-volumes:
-  postgres-data:
